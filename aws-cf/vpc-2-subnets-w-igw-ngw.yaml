@@ -1,0 +1,129 @@
+
+AWSTemplateFormatVersion: 2010-09-09
+Description: This template deploys  VPC with the following resources - 
+  1. One VPC
+  2. One public subnets in us-east-2a/b
+  3. One private subnets in us-east-2a/b
+  4. IGW with a default route to public subnets
+  5. Route tables to route traffic on each subnet to route traffic to net
+
+Resources:
+  VPC: 
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 10.30.0.0/16
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      Tags:
+        - Key: Name
+          Value: crash-fvtt
+  IGW:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+        - Key: keyname
+          Value: crash-fvtt-IGW
+  IGWAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !Ref VPC
+      InternetGatewayId: !Ref IGW
+  RouteTablePublic:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: crash-fvtt-public
+  RouteTablePublicDefaultIPv4:
+    Type: AWS::EC2::Route
+    DependsOn: IGWAttachment
+    Properties:
+      RouteTableId:
+        Ref: RouteTablePublic
+      DestinationCidrBlock: '0.0.0.0/0'
+      GatewayId:
+        Ref: IGW
+  RouteTableAssociationWebA:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref SubnetPublicA
+      RouteTableId: !Ref RouteTablePublic
+  SubnetPublicA:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      AvailabilityZone: !Select [ 0, !GetAZs '' ]
+      CidrBlock: 10.30.0.0/24
+      AssignIpv6AddressOnCreation: true
+      Tags:
+        - Key: Name
+          Value: crash-fvtt-sn-pub-A
+  SubnetPrivateA:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      AvailabilityZone: !Select [ 0, !GetAZs '' ]
+      CidrBlock: 10.30.16.0/24
+      AssignIpv6AddressOnCreation: true
+      Tags:
+        - Key: Name
+          Value: crash-fvtt-priv-A
+  EIPA: 
+   Type: 'AWS::EC2::EIP'
+   Properties:
+     Domain: vpc
+  NatGatewayA:
+    Type: 'AWS::EC2::NatGateway'
+    Properties:
+      AllocationId: !GetAtt EIPA.AllocationId
+      SubnetId: !Ref SubnetPublicA
+  RouteTablePrivA:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: name
+          Value: crash-fvtt-rt-priv-A
+  RouteNatGWA:
+    Type: 'AWS::EC2::Route'
+    Properties:
+      RouteTableId: !Ref RouteTablePrivA
+      DestinationCidrBlock: '0.0.0.0/0'
+      NatGatewayId: !Ref NatGatewayA
+  RouteTableAssociationPrivA:
+    Type: 'AWS::EC2::SubnetRouteTableAssociation'
+    Properties:
+      SubnetId: !Ref SubnetPrivateA
+      RouteTableId: !Ref RouteTablePrivA
+
+  
+
+
+
+Outputs:
+  crash-fvtt:
+    Description: VPC with 4 subnets and ipv6
+    Value: !Ref VPC
+    Export: 
+      Name: crash-fvtt
+  crash-fvttsubnetpuba:
+    Description: PubA subnet in 4 subnet vpc
+    Value: !Ref SubnetPublicA
+    Export: 
+      Name: crash-fvtt-subnet-puba
+  crash-fvttsubnetpubb:
+    Description: PubB subnet in 4 subnet vpc
+    Value: !Ref SubnetPublicB
+    Export: 
+      Name: crash-fvtt-subnet-pubb
+  crash-fvttsubnetpriva:
+    Description: PrivA subnet in 4 subnet vpc
+    Value: !Ref SubnetPrivateA
+    Export: 
+      Name: crash-fvtt-subnet-priva
+  crash-fvttsubnetprivb:
+    Description: PrivB subnet in 4 subnet vpc
+    Value: !Ref SubnetPrivateB
+    Export: 
+      Name: crash-fvtt-subnet-privb
