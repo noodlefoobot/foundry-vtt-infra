@@ -54,7 +54,7 @@ Resources:
     Type: AWS::EC2::Subnet
     Properties:
       VpcId: !Ref VPC
-      AvailabilityZone: !Select [ 0, !GetAZs '' ]
+      AvailabilityZone: us-east-1a
       CidrBlock: 10.30.0.0/24
       Tags:
         - Key: Name
@@ -63,7 +63,7 @@ Resources:
     Type: AWS::EC2::Subnet
     Properties:
       VpcId: !Ref VPC
-      AvailabilityZone: !Select [ 0, !GetAZs '' ]
+      AvailabilityZone: us-east-1b
       CidrBlock: 10.30.16.0/24
       Tags:
         - Key: Name
@@ -72,20 +72,20 @@ Resources:
     Type: AWS::EC2::Subnet
     Properties:
       VpcId: !Ref VPC
-      AvailabilityZone: !Select [ 0, !GetAZs '' ]
+      AvailabilityZone: us-east-1a
       CidrBlock: 10.30.32.0/24
       Tags:
         - Key: Name
-          Value: crashfvtt-priv-A
+          Value: crashfvtt-sn-priv-A
   SubnetPrivateB:
     Type: AWS::EC2::Subnet
     Properties:
       VpcId: !Ref VPC
-      AvailabilityZone: !Select [ 0, !GetAZs '' ]
+      AvailabilityZone: us-east-1b
       CidrBlock: 10.30.48.0/24
       Tags:
         - Key: Name
-          Value: crashfvtt-priv-B
+          Value: crashfvtt-sn-priv-B
   EIPA: 
    Type: 'AWS::EC2::EIP'
    Properties:
