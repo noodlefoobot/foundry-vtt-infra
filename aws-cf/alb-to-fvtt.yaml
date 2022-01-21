@@ -1,0 +1,60 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: This creates the security groups, target group, and alb for the foundry vtt ec2 instance.
+
+Parameters: 
+  AdminEgressIP:
+    NoEcho: true
+    Description: Admin's egress IP address
+    Type: String
+  FVTTec2InstanceID:
+    Description: InstanceId of existing fvtt ec2 instance
+    Type: String
+  VPCcidr:
+    Description: Cidr range of VPC
+    Type: String
+
+Resources:
+  CfvttInboundTraffic:
+    Type: AWS::EC2::SecurityGroup
+    Properties: 
+      GroupDescription: Enable port 30000 for FVTT
+      SecurityGroupIngress: 
+        - Description: 'Allow port 30000 in'
+          IpProtocol: tcp
+          FromPort: '30000'
+          ToPort: '30000'
+          CidrIp: !ImportValue crashfvtt-vpc-cidr
+      SecurityGroupEgress: 
+        - Description: 'Allow outgoing traffic'
+          IpProtocol: "-1"
+          CidrIp: '0.0.0.0/0'
+      Tags: 
+        - Key: purpose
+          Value: fvtt
+      VpcId: !ImportValue crashfvtt
+  CfvttSSHandPING:
+    Type: AWS::EC2::SecurityGroup
+    Properties: 
+      GroupDescription: Enable SSH from admin IP and PING from VPC
+      SecurityGroupIngress: 
+        - Description: 'Allow port 22 in from admin egress'
+          IpProtocol: tcp
+          FromPort: '22'
+          ToPort: '22'
+          CidrIp: !Ref AdminEgressIP
+        - Description: 'Allow PING from VPC cidr'
+          IpProtocol: tcp
+          FromPort: '8'
+          ToPort: '-1'
+          CidrIp: !ImportValue crashfvtt-vpc-cidr
+      SecurityGroupEgress: 
+        - Description: 'Allow outgoing traffic'
+          IpProtocol: "-1"
+          CidrIp: '0.0.0.0/0'
+      Tags: 
+        - Key: purpose
+          Value: fvtt
+      VpcId: !ImportValue crashfvtt
+  
+
+  
