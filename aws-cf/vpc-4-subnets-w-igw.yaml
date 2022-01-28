@@ -5,8 +5,7 @@ Description: This template deploys  VPC with the following resources -
   2. Two public subnets in us-east-2a/b
   3. TWo private subnets in us-east-2a/b
   4. IGW with a default route to public subnets
-  5. Route tables to route traffic on each subnet to route traffic to net
-  6. Two NatGWs
+  5. Route tables to route traffic on each subnet to net
 
 Resources:
   VPC: 
@@ -86,60 +85,6 @@ Resources:
       Tags:
         - Key: Name
           Value: crashfvtt-sn-priv-B
-  EIPA: 
-   Type: 'AWS::EC2::EIP'
-   Properties:
-     Domain: vpc
-  EIPB: 
-   Type: 'AWS::EC2::EIP'
-   Properties:
-     Domain: vpc  
-  NatGatewayA:
-    Type: 'AWS::EC2::NatGateway'
-    Properties:
-      AllocationId: !GetAtt EIPA.AllocationId
-      SubnetId: !Ref SubnetPublicA
-  NatGatewayB:
-    Type: 'AWS::EC2::NatGateway'
-    Properties:
-      AllocationId: !GetAtt EIPB.AllocationId
-      SubnetId: !Ref SubnetPublicB
-  RouteTablePrivA:
-    Type: AWS::EC2::RouteTable
-    Properties:
-      VpcId: !Ref VPC
-      Tags:
-        - Key: name
-          Value: crashfvtt-rt-priv-A
-  RouteTablePrivB:
-    Type: AWS::EC2::RouteTable
-    Properties:
-      VpcId: !Ref VPC
-      Tags:
-        - Key: name
-          Value: crashfvtt-rt-priv-B
-  RouteNatGWA:
-    Type: 'AWS::EC2::Route'
-    Properties:
-      RouteTableId: !Ref RouteTablePrivA
-      DestinationCidrBlock: '0.0.0.0/0'
-      NatGatewayId: !Ref NatGatewayA
-  RouteNatGWB:
-    Type: 'AWS::EC2::Route'
-    Properties:
-      RouteTableId: !Ref RouteTablePrivB
-      DestinationCidrBlock: '0.0.0.0/0'
-      NatGatewayId: !Ref NatGatewayB
-  RouteTableAssociationPrivA:
-    Type: 'AWS::EC2::SubnetRouteTableAssociation'
-    Properties:
-      SubnetId: !Ref SubnetPrivateA
-      RouteTableId: !Ref RouteTablePrivA
-  RouteTableAssociationPrivB:
-    Type: 'AWS::EC2::SubnetRouteTableAssociation'
-    Properties:
-      SubnetId: !Ref SubnetPrivateB
-      RouteTableId: !Ref RouteTablePrivB
 
 Outputs:
   crashfvtt:
@@ -167,8 +112,3 @@ Outputs:
     Value: !Ref SubnetPrivateB
     Export: 
       Name: crashfvtt-subnet-privb
-  crashfvttvpccidr:
-    Description: crashfvtt vpc ipv4 cidr range
-    Value: '10.30.0.0/16'
-    Export:
-      Name: crashfvtt-vpc-cidr
